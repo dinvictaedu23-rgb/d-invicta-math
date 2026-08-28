@@ -14,7 +14,8 @@
     "lucide-react": "latest",
     "tailwind-merge": "latest",
     "clsx": "latest",
-    "@supabase/supabase-js": "latest"
+    "@supabase/supabase-js": "latest",
+    "xlsx": "latest"
   },
   "devDependencies": {
     "tailwindcss": "latest",
