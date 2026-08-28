@@ -13,7 +13,8 @@
     "react-dom": "latest",
     "lucide-react": "latest",
     "tailwind-merge": "latest",
-    "clsx": "latest"
+    "clsx": "latest",
+    "@supabase/supabase-js": "latest"
   },
   "devDependencies": {
     "tailwindcss": "latest",
