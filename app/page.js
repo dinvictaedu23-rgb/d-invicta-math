@@ -5,10 +5,10 @@ import * as XLSX from 'xlsx';
 import { 
   Plus, Minus, Award, RefreshCw, LayoutDashboard, Activity, 
   CheckCircle, Lightbulb, Download, Zap, TrendingUp,
-  Target, BookOpen, ChevronRight, Hash, ArrowDownCircle
+  Target, BookOpen, ChevronRight, Hash, ArrowDownCircle, AlertCircle
 } from 'lucide-react';
 
-export default function DInvictaVerticalMath() {
+export default function DInvictaValidated() {
   const [user, setUser] = useState({ name: '', role: '', isLoggedIn: false });
   const [tempName, setTempName] = useState('');
   const [viewMode, setViewMode] = useState('student_portal'); 
@@ -18,6 +18,8 @@ export default function DInvictaVerticalMath() {
   const [exampleIndex, setExampleIndex] = useState(0);
 
   // Mastery States
+  const [assessInput, setAssessInput] = useState('');
+  const [assessFeedback, setAssessFeedback] = useState(null);
   const [isComplete, setIsComplete] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [submissions, setSubmissions] = useState([]);
@@ -34,29 +36,48 @@ export default function DInvictaVerticalMath() {
 
   const g7Examples = [
     { eq: "3x + 15 = 30", steps: [
-      { math: "3x + 15 = 30", reason: "Original Equation" },
-      { math: "3x = 30 - 15", reason: "Subtract 15 from both sides (Inverse of Addition)" },
-      { math: "3x = 15", reason: "Simplify constants" },
-      { math: "x = 15 / 3", reason: "Divide both sides by 3 (Inverse of Multiplication)" },
-      { math: "x = 5", reason: "Final Solution" }
+      { math: "3x + 15 = 30", reason: "Current State", desc: "Start with the original equation." },
+      { math: "3x = 30 - 15", reason: "Inverse Add", desc: "Move 15 to the other side (subtract)." },
+      { math: "3x = 15", reason: "Simplify", desc: "Calculate the right side result." },
+      { math: "x = 15 / 3", reason: "Inverse Mult", desc: "Divide by 3 to isolate the x variable." },
+      { math: "x = 5", reason: "Solution", desc: "The value that makes the equation true." }
     ]},
     { eq: "4x - 8 = 12", steps: [
-      { math: "4x - 8 = 12", reason: "Original Equation" },
-      { math: "4x = 12 + 8", reason: "Add 8 to both sides (Inverse of Subtraction)" },
-      { math: "4x = 20", reason: "Simplify constants" },
-      { math: "x = 20 / 4", reason: "Divide both sides by 4" },
-      { math: "x = 5", reason: "Final Solution" }
+      { math: "4x - 8 = 12", reason: "Current State", desc: "Subtraction present in the equation." },
+      { math: "4x = 12 + 8", reason: "Inverse Sub", desc: "Undo subtraction by adding 8 to both sides." },
+      { math: "4x = 20", reason: "Simplify", desc: "Combine the constants." },
+      { math: "x = 20 / 4", reason: "Inverse Mult", desc: "Isolate x by dividing by the coefficient 4." },
+      { math: "x = 5", reason: "Solution", desc: "x equals 5." }
     ]}
   ];
+
+  // --- VALIDATION ENGINE ---
+  const verifyAssessment = () => {
+    const cleanInput = assessInput.trim();
+    let isCorrect = false;
+
+    if (activeGrade === 'Grade 7') {
+      if (cleanInput === '5') isCorrect = true;
+    } else {
+      if (cleanInput === '302') isCorrect = true;
+    }
+
+    if (isCorrect) {
+      setAssessFeedback(null);
+      handleMastery("Assessment Verified");
+    } else {
+      setAssessFeedback("Incorrect. Review the vertical steps in the 'Learn' tab and try again!");
+    }
+  };
 
   // --- ENGINE LOGIC ---
   useEffect(() => {
     if (!user.isLoggedIn || isComplete) return;
-    if (activeGrade === 'Grade 2' && g2.hundreds === 2 && g2.tens === 4 && g2.ones === 5) handleMastery("Place Value Mastery");
+    if (activeGrade === 'Grade 2' && g2.hundreds === 2 && g2.tens === 4 && g2.ones === 5) handleMastery("Lab Mastered");
     const leftWeight = (g7.x * 5) + g7.units;
     const tilt = g7.target - leftWeight;
     setG7(prev => ({ ...prev, balance: tilt }));
-    if (activeGrade === 'Grade 7' && g7.x === 1 && g7.units === 0 && g7.target === 5) handleMastery("Algebraic Mastery");
+    if (activeGrade === 'Grade 7' && g7.x === 1 && g7.units === 0 && g7.target === 5) handleMastery("Lab Mastered");
   }, [g2, g7]);
 
   async function handleMastery(diag) {
@@ -76,7 +97,7 @@ export default function DInvictaVerticalMath() {
   };
 
   const resetLab = () => {
-    setIsComplete(false); setStartTime(Date.now()); setTopicTab('learn');
+    setIsComplete(false); setStartTime(Date.now()); setTopicTab('learn'); setAssessInput(''); setAssessFeedback(null);
     setG2({ hundreds: 0, tens: 0, ones: 0, target: 245 });
     setG7({ x: 3, units: 15, target: 30, balance: 0 });
   };
@@ -85,12 +106,12 @@ export default function DInvictaVerticalMath() {
     return (
       <div className="h-screen w-screen bg-[#0f172a] flex items-center justify-center p-6">
         <div className="bg-white max-w-md w-full rounded-[3.5rem] p-12 shadow-2xl text-center border-t-[12px] border-blue-600 animate-in zoom-in">
-          <h1 className="text-4xl font-black italic text-slate-900 mb-2 uppercase">D-INVICTA</h1>
+          <h1 className="text-4xl font-black italic text-slate-900 mb-2 uppercase tracking-tighter">D-INVICTA</h1>
           <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-10">Mathematics Intelligence</p>
-          <input type="text" placeholder="Full Name" className="w-full bg-slate-50 border-2 rounded-2xl px-6 py-4 mb-6 font-black outline-none focus:border-blue-500" onChange={(e)=>setTempName(e.target.value)}/>
+          <input type="text" placeholder="Full Name" className="w-full bg-slate-50 border-2 rounded-2xl px-6 py-4 mb-6 font-black outline-none focus:border-blue-500 transition-all" onChange={(e)=>setTempName(e.target.value)}/>
           <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => handleLogin('student')} className="bg-blue-600 text-white py-5 rounded-3xl font-black text-xs uppercase shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition">Student</button>
-            <button onClick={() => handleLogin('teacher')} className="bg-slate-900 text-white py-5 rounded-3xl font-black text-xs uppercase shadow-lg active:scale-95 transition">Teacher</button>
+            <button onClick={() => handleLogin('student')} className="bg-blue-600 text-white py-5 rounded-3xl font-black text-xs uppercase shadow-lg shadow-blue-200 hover:bg-blue-700 transition">Student</button>
+            <button onClick={() => handleLogin('teacher')} className="bg-slate-900 text-white py-5 rounded-3xl font-black text-xs uppercase shadow-lg transition">Teacher</button>
           </div>
         </div>
       </div>
@@ -107,7 +128,7 @@ export default function DInvictaVerticalMath() {
         </div>
         <div className="flex-1 overflow-y-auto space-y-8 pr-2">
           <div>
-            <p className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest">Mastery Level</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest text-white opacity-40">Grade Level</p>
             <div className="grid grid-cols-2 gap-2">
               {["Grade 2", "Grade 7"].map(g => (
                 <button key={g} onClick={()=>{setActiveGrade(g); setActiveTopic(curriculum[g][0]); resetLab();}} className={`px-2 py-3 rounded-xl text-[10px] font-black transition-all ${activeGrade === g ? 'bg-blue-600 shadow-lg' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}>{g}</button>
@@ -115,9 +136,9 @@ export default function DInvictaVerticalMath() {
             </div>
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest">Active Topics</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest text-white opacity-40">Topics</p>
             {curriculum[activeGrade].map(topic => (
-              <button key={topic} onClick={()=>{setActiveTopic(topic); resetLab();}} className={`w-full text-left p-4 rounded-2xl text-xs font-black mb-2 transition-all ${activeTopic === topic ? 'bg-slate-800 text-blue-400 border-l-4 border-blue-500' : 'text-slate-500'}`}>{topic}</button>
+              <button key={topic} onClick={()=>{setActiveTopic(topic); resetLab();}} className={`w-full text-left p-4 rounded-2xl text-xs font-black mb-2 transition-all ${activeTopic === topic ? 'bg-slate-800 text-blue-400 border-l-4 border-blue-500 shadow-inner' : 'text-slate-500'}`}>{topic}</button>
             ))}
           </div>
         </div>
@@ -127,15 +148,15 @@ export default function DInvictaVerticalMath() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <main className="flex-1 p-12 overflow-y-auto relative bg-[#f8fafc]">
         
         {isComplete && viewMode === 'student_portal' && (
           <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6">
             <div className="bg-white rounded-[4rem] p-12 text-center shadow-2xl max-w-lg w-full border-b-[12px] border-emerald-500 animate-in zoom-in">
                <Award className="text-yellow-500 w-24 h-24 mx-auto mb-6 animate-bounce" />
-               <h3 className="text-4xl font-black text-slate-800 mb-2 tracking-tighter">UNCONQUERABLE!</h3>
-               <p className="text-slate-500 font-bold mb-10 italic">Topic mastered. Data transmitted to intelligence hub.</p>
+               <h3 className="text-5xl font-black text-slate-800 mb-2 tracking-tighter uppercase italic">Unconquerable!</h3>
+               <p className="text-slate-500 font-bold mb-10 italic">Mathematics mastery confirmed. Data synced to intelligence hub.</p>
                <button onClick={resetLab} className="bg-blue-600 text-white w-full py-5 rounded-3xl font-black uppercase tracking-widest shadow-xl hover:bg-slate-900 transition flex items-center justify-center gap-3"><RefreshCw size={20}/> New Mission</button>
             </div>
           </div>
@@ -143,7 +164,7 @@ export default function DInvictaVerticalMath() {
 
         <header className="flex justify-between items-end mb-12">
           <div>
-            <h2 className="text-xs font-black text-blue-500 uppercase tracking-[0.3em] mb-2">{activeGrade} • Roadmap</h2>
+            <h2 className="text-xs font-black text-blue-500 uppercase tracking-[0.3em] mb-2">{activeGrade} • Standardized Roadmap</h2>
             <h3 className="text-6xl font-black text-slate-900 tracking-tighter uppercase">{activeTopic}</h3>
           </div>
           {viewMode === 'student_portal' && (
@@ -158,15 +179,15 @@ export default function DInvictaVerticalMath() {
         {viewMode === 'student_portal' && (
           <div className="max-w-5xl mx-auto space-y-10">
             
-            {/* LEARN TAB: VERTICAL EXPLANATIONS */}
+            {/* LEARN TAB: Polished Vertical Alignment */}
             {topicTab === 'learn' && (
-              <div className="bg-white p-12 rounded-[4rem] shadow-xl border border-slate-100 animate-in fade-in">
+              <div className="bg-white p-12 rounded-[4rem] shadow-xl border border-slate-100 animate-in fade-in duration-500">
                  <div className="flex items-center justify-between mb-10 border-b pb-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center"><Lightbulb size={24}/></div>
-                        <h4 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Step-By-Step Logic</h4>
+                        <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner"><Lightbulb size={24}/></div>
+                        <h4 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Step-By-Step Reasoning</h4>
                     </div>
-                    <button onClick={()=>setExampleIndex((exampleIndex + 1) % g7Examples.length)} className="text-xs font-black text-blue-600 underline uppercase tracking-widest hover:text-blue-800">Next Example →</button>
+                    <button onClick={()=>setExampleIndex((exampleIndex + 1) % g7Examples.length)} className="bg-slate-50 px-4 py-2 rounded-xl text-xs font-black text-blue-600 border uppercase tracking-widest hover:bg-white transition shadow-sm flex items-center gap-2">Next Example <RefreshCw size={12}/></button>
                  </div>
 
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -174,30 +195,31 @@ export default function DInvictaVerticalMath() {
                         <p className="text-xl text-slate-500 font-medium leading-relaxed">
                           {activeGrade === 'Grade 7' ? 
                           "To find the value of x, we must work backwards. We use inverse operations to peel away the layers until x is by itself." : 
-                          "Every digit has a place. We build numbers by grouping units into tens, and tens into hundreds."}
+                          "Numbers are built using places. 10 Ones make 1 Ten. 10 Tens make 1 Hundred."}
                         </p>
-                        <div className="bg-blue-50 p-6 rounded-3xl border-l-8 border-blue-500">
-                           <p className="text-sm font-bold text-blue-800">💡 Strategy Tip:</p>
-                           <p className="text-sm text-blue-600 italic">"Always undo addition or subtraction before you undo multiplication or division."</p>
+                        <div className="bg-blue-50 p-8 rounded-[2.5rem] border-2 border-blue-100 relative overflow-hidden">
+                           <div className="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 rounded-bl-2xl font-black text-[10px] uppercase">Rule</div>
+                           <p className="text-sm font-bold text-blue-800 mb-2 underline decoration-blue-200">The Golden Property of Equality:</p>
+                           <p className="text-sm text-blue-600 italic">"Whatever operation you perform on one side, you must perform on the other to maintain balance."</p>
                         </div>
                     </div>
 
-                    <div className="bg-slate-900 p-10 rounded-[3rem] shadow-2xl relative">
-                        <div className="absolute top-6 right-8 text-blue-400 opacity-30"><Hash size={40}/></div>
-                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-8">Vertical Solution Path</p>
-                        <div className="space-y-8">
-                           {(activeGrade === 'Grade 7' ? g7Examples[exampleIndex].steps : [{math: "200 + 40 + 5", reason: "Expanded Form"}, {math: "245", reason: "Standard Form"}]).map((step, i) => (
-                             <div key={i} className="flex gap-6 items-start animate-in slide-in-from-left duration-300" style={{delay: `${i * 100}ms`}}>
-                                <div className="text-slate-300 font-mono text-2xl font-bold pt-1 min-w-[140px] text-right tracking-tighter">{step.math}</div>
+                    <div className="bg-[#0f172a] p-10 rounded-[3.5rem] shadow-2xl relative border-t-8 border-blue-500">
+                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-10 text-center opacity-60">Vertical Execution Path</p>
+                        <div className="space-y-6">
+                           {(activeGrade === 'Grade 7' ? g7Examples[exampleIndex].steps : [{math: "200 + 40 + 5", reason: "Expanded Form", desc: "Break it down."}, {math: "245", reason: "Standard Form", desc: "Combine digits."}]).map((step, i) => (
+                             <div key={i} className="flex gap-8 items-start animate-in slide-in-from-left duration-300">
+                                <div className="text-slate-100 font-mono text-3xl font-black pt-1 min-w-[160px] text-right tracking-tighter drop-shadow-sm">{step.math}</div>
                                 <div className="pt-2">
-                                   <div className="bg-slate-800 px-3 py-1 rounded-full inline-block text-[10px] font-black text-blue-400 uppercase tracking-tighter">{step.reason}</div>
+                                   <div className="bg-blue-900/50 border border-blue-700 px-3 py-1 rounded-lg inline-block text-[10px] font-black text-blue-400 uppercase tracking-tighter mb-1">{step.reason}</div>
+                                   <p className="text-[10px] text-slate-500 font-bold leading-tight">{step.desc}</p>
                                 </div>
                              </div>
                            ))}
                         </div>
                     </div>
                  </div>
-                 <button onClick={()=>setTopicTab('simulation')} className="mt-12 bg-blue-600 text-white px-10 py-5 rounded-3xl font-black uppercase tracking-widest flex items-center gap-3 mx-auto shadow-xl hover:bg-slate-900 transition">Open Lab Mission <ChevronRight/></button>
+                 <button onClick={()=>setTopicTab('simulation')} className="mt-12 bg-blue-600 text-white px-10 py-6 rounded-3xl font-black uppercase tracking-widest flex items-center gap-3 mx-auto shadow-2xl hover:bg-slate-900 transition active:scale-95">Open Lab Mission <ChevronRight/></button>
               </div>
             )}
 
@@ -220,7 +242,7 @@ export default function DInvictaVerticalMath() {
                    </div>
                  ) : (
                    <div className="space-y-16">
-                      <div className="bg-slate-900 text-white py-4 px-10 rounded-2xl inline-block font-mono text-3xl font-black tracking-[0.2em] italic text-blue-400">3x + 15 = 30</div>
+                      <div className="bg-slate-900 text-white py-4 px-10 rounded-2xl inline-block font-mono text-3xl font-black tracking-[0.2em] italic text-blue-400 shadow-2xl">3x + 15 = 30</div>
                       <div className="h-64 flex flex-col items-center justify-center relative">
                         <div className="w-full h-3 bg-slate-800 rounded-full transition-all duration-1000 shadow-xl" style={{ transform: `rotate(${g7.balance}deg)` }}>
                           <div className="absolute -left-16 -top-28 w-52 flex flex-col items-center">
@@ -235,28 +257,42 @@ export default function DInvictaVerticalMath() {
                         <div className="w-0 h-0 border-l-[50px] border-r-[40px] border-b-[90px] border-b-slate-800 mt-[-4px]"></div>
                       </div>
                       <div className="grid grid-cols-2 gap-8 max-w-2xl mx-auto">
-                        <button onClick={()=>setG7({...g7, units:0, target:15})} className="p-7 bg-blue-600 text-white rounded-3xl font-black uppercase shadow-2xl hover:bg-blue-700 transition">Subtract 15 (Both)</button>
-                        <button onClick={()=>{if(g7.units===0)setG7({...g7, x:1, target:5})}} className="p-7 bg-slate-900 text-white rounded-3xl font-black uppercase shadow-2xl hover:bg-black transition">Divide by 3 (Both)</button>
+                        <button onClick={()=>setG7({...g7, units:0, target:15})} className="p-7 bg-blue-600 text-white rounded-3xl font-black uppercase tracking-widest shadow-2xl hover:bg-blue-700 transition">Subtract 15 (Both)</button>
+                        <button onClick={()=>{if(g7.units===0)setG7({...g7, x:1, target:5})}} className="p-7 bg-slate-900 text-white rounded-3xl font-black uppercase tracking-widest shadow-2xl hover:bg-black transition">Divide by 3 (Both)</button>
                       </div>
                    </div>
                  )}
                </div>
             )}
 
-            {/* ASSESS TAB: DIFFERENTIATED QUESTIONS */}
+            {/* ASSESS TAB: REAL VALIDATION LOGIC */}
             {topicTab === 'assess' && (
-              <div className="bg-white p-16 rounded-[4rem] shadow-xl border border-slate-100 animate-in fade-in zoom-in">
-                 <h4 className="text-4xl font-black text-slate-800 mb-10 flex items-center gap-4 underline decoration-blue-500 decoration-[12px] underline-offset-[-2px] decoration-white/0 tracking-tighter">✏️ Mastery Certification</h4>
+              <div className="bg-white p-16 rounded-[4rem] shadow-xl border border-slate-100 animate-in fade-in zoom-in duration-500">
+                 <h4 className="text-4xl font-black text-slate-800 mb-10 flex items-center gap-4 tracking-tighter">✏️ Mastery Certification</h4>
                  <div className="p-12 bg-slate-50 rounded-[4rem] border-2 border-dashed border-slate-200">
-                    <p className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Mastery Check #1</p>
-                    <p className="text-2xl font-bold text-slate-800 leading-tight mb-8">
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4">Mastery Check #1</p>
+                    <p className="text-3xl font-bold text-slate-800 leading-tight mb-10">
                         {activeGrade === 'Grade 7' ? 
                         "Final Challenge: To isolate x in the equation 5x + 10 = 35, what is the value of x?" : 
                         "Final Challenge: You have 3 Hundreds, 0 Tens, and 2 Ones. What number did you build?"}
                     </p>
-                    <div className="flex gap-4">
-                        <input type="text" placeholder="Enter Value" className="flex-1 bg-white border-4 border-slate-100 p-6 rounded-3xl text-2xl font-black outline-none focus:border-blue-500 transition-all shadow-inner" />
-                        <button onClick={()=>alert("Assessment validated. Logging results.")} className="bg-emerald-600 text-white px-10 rounded-3xl font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200">Verify</button>
+                    <div className="space-y-6">
+                        <div className="flex gap-4">
+                            <input 
+                              type="text" 
+                              value={assessInput}
+                              onChange={(e)=>setAssessInput(e.target.value)}
+                              placeholder="Enter Numeric Value" 
+                              className="flex-1 bg-white border-4 border-slate-100 p-8 rounded-3xl text-4xl font-black outline-none focus:border-blue-500 transition-all shadow-inner placeholder:text-slate-200" 
+                            />
+                            <button onClick={verifyAssessment} className="bg-emerald-600 text-white px-12 rounded-[2rem] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 active:scale-95">Verify Answer</button>
+                        </div>
+                        {assessFeedback && (
+                          <div className="flex items-center gap-3 p-5 bg-red-50 border-2 border-red-100 text-red-600 rounded-2xl font-bold animate-in shake-in duration-300">
+                             <AlertCircle size={20}/>
+                             <p>{assessFeedback}</p>
+                          </div>
+                        )}
                     </div>
                  </div>
               </div>
@@ -267,27 +303,26 @@ export default function DInvictaVerticalMath() {
 
         {/* TEACHER DASHBOARD */}
         {viewMode === 'teacher_dash' && (
-          <div className="max-w-7xl mx-auto space-y-10 animate-in slide-in-from-bottom-8">
+          <div className="max-w-7xl mx-auto space-y-10">
              <div className="grid grid-cols-3 gap-8">
-                <div className="bg-white p-10 rounded-[3rem] border shadow-sm"><p className="text-[10px] font-black text-slate-400 mb-2 uppercase">Avg Mastery</p><p className="text-6xl font-black text-slate-900">92%</p></div>
+                <div className="bg-white p-10 rounded-[3rem] border shadow-sm border-b-[8px] border-blue-500"><p className="text-[10px] font-black text-slate-400 mb-2 uppercase">Avg Mastery</p><p className="text-6xl font-black text-slate-900">92%</p></div>
                 <button onClick={()=>setIsLive(!isLive)} className={`${isLive ? 'bg-emerald-600' : 'bg-slate-400'} p-10 rounded-[3rem] text-white shadow-2xl text-left transition-all`}>
-                   <p className="text-[10px] font-black uppercase opacity-70">Live Sync</p>
-                   <p className="text-3xl font-black mt-2 uppercase">{isLive ? 'ACTIVE' : 'OFF'}</p>
+                   <p className="text-[10px] font-black uppercase opacity-70">Live Feed</p><p className="text-3xl font-black mt-2 uppercase">{isLive ? 'SYNCED' : 'OFF'}</p>
                 </button>
-                <button className="bg-[#0f172a] p-10 rounded-[3rem] text-white shadow-2xl text-left"><Download className="mb-4 text-blue-400" size={32}/><p className="text-2xl font-black">GENERATE EXCEL</p></button>
+                <button className="bg-[#0f172a] p-10 rounded-[3rem] text-white shadow-2xl text-left hover:bg-black transition-all" onClick={downloadExcel}><Download className="mb-4 text-blue-400" size={32}/><p className="text-2xl font-black uppercase underline decoration-blue-500/20">Get Excel Report</p></button>
              </div>
-             <div className="bg-white rounded-[3.5rem] border shadow-sm overflow-hidden">
+             <div className="bg-white rounded-[4rem] border shadow-sm overflow-hidden animate-in fade-in duration-700">
                 <table className="w-full text-left">
-                  <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
-                    <tr><th className="p-10">Student</th><th className="p-10">Topic Path</th><th className="p-10 text-center">Score</th><th className="p-10">Diagnosis</th></tr>
+                  <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b tracking-[0.2em]">
+                    <tr><th className="p-10">Student Identity</th><th className="p-10">Topic Path</th><th className="p-10 text-center">Score</th><th className="p-10">Diagnosis</th></tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {submissions.map((s, i) => (
                       <tr key={i} className="hover:bg-blue-50/20 group">
                         <td className="p-10 font-black text-slate-800 text-lg">{s.student_name}</td>
-                        <td className="p-10 text-slate-400 font-bold text-sm">{s.topic}</td>
-                        <td className="p-10 text-center"><span className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl font-black text-lg">{s.score}%</span></td>
-                        <td className="p-10 font-bold italic text-sm text-red-500 underline decoration-red-200">{s.misconception_detected}</td>
+                        <td className="p-10 text-slate-400 font-bold text-sm tracking-tight">{s.topic}</td>
+                        <td className="p-10 text-center"><span className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl font-black text-lg">100%</span></td>
+                        <td className={`p-10 font-bold italic text-sm ${s.misconception_detected.includes('Elite') ? 'text-blue-500' : 'text-red-500 underline decoration-red-200'}`}>{s.misconception_detected}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -305,7 +340,7 @@ const BlockUI = ({ label, val, color, onP, onM }) => (
     <p className="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">{label}</p>
     <div className="flex items-center justify-between gap-4">
        <button onClick={onM} className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 hover:text-red-500 transition-all"><Minus/></button>
-       <span className="text-5xl font-black text-slate-800">{val}</span>
+       <span className="text-5xl font-black text-slate-800 tracking-tighter">{val}</span>
        <button onClick={onP} className={`${color} w-14 h-14 rounded-2xl text-white flex items-center justify-center shadow-lg hover:scale-110 transition-all`}><Plus/></button>
     </div>
   </div>
